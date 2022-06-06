@@ -7,6 +7,7 @@ from utils import *
 import torch
 import torch.nn as nn
 import numpy as np
+import datetime
 
 def print_image_tensor(list_tensors):
     for i, x in enumerate(list_tensors):
@@ -52,9 +53,9 @@ class Experiment():
 
             if os.path.exists(self.__experiment_dir):
                 self.__training_losses_gen = read_file_in_dir(self.__experiment_dir, 'training_losses_gen.txt')
-                #self.__val_losses_gen = read_file_in_dir(self.__experiment_dir, 'val_losses_gen.txt')
+                
                 self.__training_losses_disc = read_file_in_dir(self.__experiment_dir, 'training_losses_disc.txt')
-                #self.__val_losses_disc = read_file_in_dir(self.__experiment_dir, 'val_losses_disc.txt')
+                
                 self.__current_epoch = len(self.__training_losses_disc)
                 self.__epochs-=self.__current_epoch
 
@@ -76,7 +77,7 @@ class Experiment():
 
             self.val_data = load_data(self.image_dir, self.label_dir, subfolder='val/')
             self.val_data_loader = torch.utils.data.DataLoader(dataset=self.val_data, batch_size=2,shuffle=True)
-            self.val_input, self.val_target = self.val_data_loader.__iter__().__next__()
+            
 
         def train(self):
 
@@ -155,9 +156,11 @@ class Experiment():
                 self.__save_model()
 
                 #Show result for test image
-                gen_image = self.G(self.val_input.cuda())
-                gen_image = gen_image.cpu()
-                print_image_tensor([self.val_input[0], gen_image[0],self.val_target[0]])
+                if(epoch%5==0):
+                    self.val_input, self.val_target = self.val_data_loader.__iter__().__next__()
+                    gen_image = self.G(self.val_input.cuda())
+                    gen_image = gen_image.cpu()
+                    print_image_tensor([self.val_input[0], gen_image[0],self.val_target[0]])
                 self.__current_epoch+=1
 
 
@@ -175,25 +178,21 @@ class Experiment():
         def __record_stats(self, train_loss, loss_type):            
             if(loss_type == 'gen'):
                 self.__training_losses_gen.append(train_loss)
-                #self.__val_losses_gen.append(val_loss)
-
+                
                 self.plot_stats(loss_type)
 
 
                 write_to_file_in_dir(self.__experiment_dir, 'training_losses_'+loss_type +'.txt', self.__training_losses_gen)
 
-                #write_to_file_in_dir(self.__experiment_dir, 'val_losses_'+loss_type+'.txt', self.__val_losses_gen)
-
+                
 
             elif(loss_type == 'disc'):
                 self.__training_losses_disc.append(train_loss)
-                #self.__val_losses_disc.append(val_loss)
-
+                
                 self.plot_stats(loss_type)
 
                 write_to_file_in_dir(self.__experiment_dir, 'training_losses_'+loss_type +'.txt', self.__training_losses_disc)
-                #write_to_file_in_dir(self.__experiment_dir, 'val_losses_'+loss_type+'.txt', self.__val_losses_disc)
-
+                
 
         def __log(self, log_str, file_name=None):
             print(log_str)
@@ -205,13 +204,13 @@ class Experiment():
             time_elapsed = datetime.now() - start_time
             time_to_completion = time_elapsed * (self.__epochs - self.__current_epoch - 1)
             train_loss = self.__training_losses_gen[self.__current_epoch]
-            #val_loss = self.__val_losses_disc[self.__current_epoch]
+            
             summary_str = "Epoch: {}, Train Loss: {} , Took {}, ETA: {}\n"
             summary_str = summary_str.format(self.__current_epoch + 1, train_loss, str(time_elapsed),
                                              str(time_to_completion))
             self.__log(summary_str, 'epoch.log')
             train_loss = self.__training_losses_disc[self.__current_epoch]
-            #val_loss = self.__val_losses_disc[self.__current_epoch]
+            
             summary_str = "Epoch: {}, Train Loss: {} , Took {}, ETA: {}\n"
             summary_str = summary_str.format(self.__current_epoch + 1, train_loss, str(time_elapsed),
                                              str(time_to_completion))
@@ -221,17 +220,21 @@ class Experiment():
             e = self.__current_epoch+1
             x_axis = np.arange(1, e + 1)
             plt.figure()
+            title=None
             if(loss_type == 'disc'):
-                plt.title('Discriminator Loss Plot')
+                title='Discriminator Loss Plot'
+                plt.title(title)
                 training_loss = self.__training_losses_disc
-                #validation_loss = self.__val_losses_disc
             elif(loss_type == 'gen'):
-                plt.title('Generator Loss Plot')
+                title='Generator Loss Plot'
+                plt.title(title)
                 training_loss = self.__training_losses_gen
-                #validation_loss = self.__val_losses_gen
             plt.plot(x_axis, training_loss, label="Training Loss")
-            #plt.plot(x_axis, validation_loss, label="Validation Loss")
             plt.xlabel("Epochs")
+            plt.savefig(self.__experiment_dir+'/'+title+'.png')
+            plt.close()
+
+
 
 
 
