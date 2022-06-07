@@ -20,7 +20,7 @@ def print_image_tensor(list_tensors):
 class Experiment():
         def __init__(self,name="default"):
             config_data = read_file_in_dir('./', name + '.json')
-            self.ROOT_STATS_DIR = './experiment_data'
+            self.ROOT_STATS_DIR = config_data['root_dir']
             if config_data is None:
                 raise Exception("Configuration file doesn't exist: ", name)
 
@@ -31,6 +31,11 @@ class Experiment():
             self.image_dir=config_data['image_dir']
             self.label_dir=config_data['label_dir']
             self.lambd=config_data['lambda']
+            self.batch_size=config_data['batch_size']
+            self.train_folder=config_data['train_folder']
+            self.val_folder=config_data['val_folder']
+            self.test_folder=config_data['test_folder']
+            
             
             self.__current_epoch = 0
             self.__training_losses_gen = []
@@ -43,10 +48,15 @@ class Experiment():
             
             self.G_optimizer = torch.optim.Adam(self.G.parameters(), lr=0.0002, betas=(0.5, 0.999))
             self.D_optimizer = torch.optim.Adam(self.D.parameters(), lr=0.0002, betas=(0.5, 0.999))
+            
+            #self.tex_con=models.vgg19(pretrained=True).features
+            #self.tex_con=self.tex_con.cuda().float()
 
             self.dataloading()
             
             self.__load_experiment()
+            
+            
             
         def __load_experiment(self):
             os.makedirs(self.ROOT_STATS_DIR, exist_ok=True)
@@ -72,12 +82,14 @@ class Experiment():
         
         def dataloading(self):
             
-            self.train_data = load_data(self.image_dir, self.label_dir, subfolder='train/')
-            self.train_data_loader = torch.utils.data.DataLoader(dataset=self.train_data, batch_size=2,shuffle=True)
+            self.train_data = load_data(self.__name,self.image_dir, self.label_dir, subfolder=self.train_folder)
+            self.train_data_loader = torch.utils.data.DataLoader(dataset=self.train_data, batch_size=self.batch_size,shuffle=True)
 
-            self.val_data = load_data(self.image_dir, self.label_dir, subfolder='val/')
-            self.val_data_loader = torch.utils.data.DataLoader(dataset=self.val_data, batch_size=2,shuffle=True)
+            self.val_data = load_data(self.__name,self.image_dir, self.label_dir, subfolder=self.val_folder)
+            self.val_data_loader = torch.utils.data.DataLoader(dataset=self.val_data, batch_size=self.batch_size,shuffle=True)
             
+            self.test_data = load_data(self.__name,self.image_dir, self.label_dir, subfolder=self.test_folder)
+            self.test_data_loader = torch.utils.data.DataLoader(dataset=self.test_data, batch_size=self.batch_size,shuffle=True)
 
         def train(self):
 
@@ -108,7 +120,11 @@ class Experiment():
                     D_real_decision = self.D(x_, y_).squeeze()
                     real_ = torch.ones(D_real_decision.size()).cuda()
                     D_real_loss = BCE_loss(D_real_decision, real_)
-
+                    
+                    
+                    
+                   
+                   
                     # Train discriminator with fake data
                     gen_image = self.G(x_)
                     D_fake_decision = self.D(x_, gen_image).squeeze()
@@ -116,7 +132,8 @@ class Experiment():
                     D_fake_loss = BCE_loss(D_fake_decision, fake_)
 
                     # Back propagation
-                    D_loss = (D_real_loss + D_fake_loss) * 0.5
+                    #D_loss = (D_real_loss + D_fake_loss) * 0.5
+                    D_loss = -(torch.mean(D_real_decision) - torch.mean(D_fake_decision))
                     self.D.zero_grad()
                     D_loss.backward()
                     self.D_optimizer.step()
@@ -125,12 +142,22 @@ class Experiment():
                     gen_image = self.G(x_)
                     D_fake_decision = self.D(x_, gen_image).squeeze()
                     G_fake_loss = BCE_loss(D_fake_decision, real_)
+                    
+                    #color loss
+                    #color_loss=color_loss_f(y_,gen_image)
+                    
+                    #style and content loss
+                    '''gen_features=self.tex_con(gen_image)
+                    orig_feautes=self.tex_con(x_)
+                    style_featues=self.tex_con(y_)
+                    tex_con_loss=calculate_loss(gen_features, orig_feautes, style_featues)'''
 
                     # L1 loss
                     l1_loss =self.lambd * L1_loss(gen_image, y_) #(lambda value=100)
 
                     # Back propagation
-                    G_loss = G_fake_loss + l1_loss
+                    G_loss = -torch.mean(D_fake_decision)+l1_loss
+                    #G_loss = G_fake_loss + l1_loss + 0.5*color_loss + 0.5*tex_con_loss
                     self.G.zero_grad()
                     G_loss.backward()
                     self.G_optimizer.step()
@@ -163,7 +190,18 @@ class Experiment():
                     print_image_tensor([self.val_input[0], gen_image[0],self.val_target[0]])
                 self.__current_epoch+=1
 
-
+        def test(self):
+            for i,(input, target) in enumerate(self.test_data_loader):
+                    if(i==10):
+                        break
+                    gen_image = self.G(input.cuda())
+                    gen_image = gen_image.cpu()
+                    print_image_tensor([input[0], gen_image[0]])
+                    
+                
+                
+                
+            
         def __save_model(self, name = 'latest_model.pt'):
             root_model_path = os.path.join(self.__experiment_dir, name)    
             torch.save({
@@ -219,7 +257,7 @@ class Experiment():
         def plot_stats(self, loss_type):
             e = self.__current_epoch+1
             x_axis = np.arange(1, e + 1)
-            plt.figure()
+            fig=plt.figure()
             title=None
             if(loss_type == 'disc'):
                 title='Discriminator Loss Plot'
@@ -237,7 +275,7 @@ class Experiment():
 
 
 
-
 if __name__=="__main__":
-    exp=Experiment("default")
+    exp=Experiment("config_files/cityscapes")
     exp.train()
+    exp.test()
