@@ -25,6 +25,11 @@ class load_data(data.Dataset):
             self.label_path+="winter/"
             self.image_filenames=[x for x in os.listdir(self.input_path) if not x.startswith('.')]
             self.label_filenames=[x for x in os.listdir(self.label_path) if not x.startswith('.')]
+        elif(experiment_name=="LDR-HDR"):
+            self.input_path+="LDR/"
+            self.label_path+="HDR/"
+            self.image_filenames=sorted([x for x in os.listdir(self.input_path) if not x.startswith('.')])
+            self.label_filenames=sorted([x for x in os.listdir(self.label_path) if not x.startswith('.')])
             
     def __getitem__(self, index):
         # Load Image
@@ -36,9 +41,15 @@ class load_data(data.Dataset):
         label = Image.open(label_fn).convert('RGB')
         
         width,height=img.size
-        if(self.experiment_name=="shoes_edges" or self.experiment_name=="maps"):
+        if(self.experiment_name=="shoes_edges"):
             img=img.crop((0,0,width/2,height))
             label=label.crop((width/2,0,width,height))
+        elif(self.experiment_name=="maps"):
+            label=label.crop((width/2,0,width-88,height-44))
+            img=img.crop((0,0,width/2-88,height-44))
+            height=512
+            width=1024
+            
         
             
         resize = transforms.Resize([height, width])
