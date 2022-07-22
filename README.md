@@ -5,7 +5,6 @@ In this repo, we've implemented both Conditional GANS and Cycle GANS on multiple
 
 The datasets we've used include:
 
- Markup :
    - Edges -> Shoes translation *(CGANS)
    - Satellite view -> Street View translation of maps *(CGANS)
    - Segmentation of road views *(CGANS)
