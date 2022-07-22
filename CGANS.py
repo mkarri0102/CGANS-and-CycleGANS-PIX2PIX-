@@ -1,14 +1,3 @@
-from Generator import Generator 
-from Discriminator import Discriminator 
-from DataLoader import load_data 
-import os
-from matplotlib import pyplot as plt
-from utils import *
-import torch
-import torch.nn as nn
-import numpy as np
-import datetime
-
 def print_image_tensor(list_tensors):
     for i, x in enumerate(list_tensors):
         x = x.permute(1,2,0)
@@ -20,7 +9,7 @@ def print_image_tensor(list_tensors):
 class Experiment():
         def __init__(self,name="default"):
             config_data = read_file_in_dir('./', name + '.json')
-            self.ROOT_STATS_DIR = config_data['root_dir']
+            self.ROOT_STATS_DIR = './experiment_data_ablation'
             if config_data is None:
                 raise Exception("Configuration file doesn't exist: ", name)
 
@@ -32,17 +21,13 @@ class Experiment():
             self.label_dir=config_data['label_dir']
             self.lambd=config_data['lambda']
             self.batch_size=config_data['batch_size']
-            self.train_folder=config_data['train_folder']
-            self.val_folder=config_data['val_folder']
-            self.test_folder=config_data['test_folder']
-            
             
             self.__current_epoch = 0
             self.__training_losses_gen = []
             self.__training_losses_disc = []
             
             self.G = Generator(3, 64, 3)
-            self.D = Discriminator(6)
+            self.D = Discriminator(3)
             self.G.cuda()
             self.D.cuda()
             
@@ -82,13 +67,13 @@ class Experiment():
         
         def dataloading(self):
             
-            self.train_data = load_data(self.__name,self.image_dir, self.label_dir, subfolder=self.train_folder)
+            self.train_data = load_data(self.__name,self.image_dir, self.label_dir, subfolder='train/')
             self.train_data_loader = torch.utils.data.DataLoader(dataset=self.train_data, batch_size=self.batch_size,shuffle=True)
 
-            self.val_data = load_data(self.__name,self.image_dir, self.label_dir, subfolder=self.val_folder)
+            self.val_data = load_data(self.__name,self.image_dir, self.label_dir, subfolder='val/')
             self.val_data_loader = torch.utils.data.DataLoader(dataset=self.val_data, batch_size=self.batch_size,shuffle=True)
             
-            self.test_data = load_data(self.__name,self.image_dir, self.label_dir, subfolder=self.test_folder)
+            self.test_data = load_data(self.__name,self.image_dir, self.label_dir, subfolder='val/')
             self.test_data_loader = torch.utils.data.DataLoader(dataset=self.test_data, batch_size=self.batch_size,shuffle=True)
 
         def train(self):
@@ -117,7 +102,7 @@ class Experiment():
                     #print(y_.shape)
 
                     # Train discriminator with real data
-                    D_real_decision = self.D(x_, y_).squeeze()
+                    D_real_decision = self.D(y_).squeeze()
                     real_ = torch.ones(D_real_decision.size()).cuda()
                     D_real_loss = BCE_loss(D_real_decision, real_)
                     
@@ -127,7 +112,7 @@ class Experiment():
                    
                     # Train discriminator with fake data
                     gen_image = self.G(x_)
-                    D_fake_decision = self.D(x_, gen_image).squeeze()
+                    D_fake_decision = self.D(gen_image).squeeze()
                     fake_ = torch.zeros(D_fake_decision.size()).cuda()
                     D_fake_loss = BCE_loss(D_fake_decision, fake_)
 
@@ -140,7 +125,7 @@ class Experiment():
 
                     # Train generator
                     gen_image = self.G(x_)
-                    D_fake_decision = self.D(x_, gen_image).squeeze()
+                    D_fake_decision = self.D(gen_image).squeeze()
                     G_fake_loss = BCE_loss(D_fake_decision, real_)
                     
                     #color loss
@@ -275,7 +260,10 @@ class Experiment():
 
 
 
+
+
+
 if __name__=="__main__":
-    exp=Experiment("config_files/cityscapes")
+    exp=Experiment("config_files/LDR-HDR")
     exp.train()
     exp.test()
