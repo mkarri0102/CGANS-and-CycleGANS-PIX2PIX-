@@ -264,6 +264,6 @@ class Experiment():
 
 
 if __name__=="__main__":
-    exp=Experiment("config_files/LDR-HDR")
+    exp=Experiment("LDR-HDR")
     exp.train()
     exp.test()
