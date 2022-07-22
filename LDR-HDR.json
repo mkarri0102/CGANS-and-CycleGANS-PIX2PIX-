@@ -1,0 +1,12 @@
+{
+    "experiment_name": "LDR-HDR",
+    "image_dir":"./datasets/LDR-HDR",
+    "label_dir":"./datasets/LDR-HDR",
+    "batch_size":4,
+    "num_epochs":20,
+    "lambda":100,
+    "train_folder":"train/",
+    "val_folder":"test/",
+    "test_folder":"test/",
+    "root_dir":"./LDR-HDR_exp2"
+  }

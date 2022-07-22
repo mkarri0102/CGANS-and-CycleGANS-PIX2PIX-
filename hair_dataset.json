@@ -1,0 +1,12 @@
+{
+    "experiment_name": "hairstyles",
+    "image_dir":"./datasets/Hair_dataset",
+    "label_dir":"./datasets/Hair_dataset",
+    "batch_size":15,
+    "num_epochs":30,
+    "lambda":100,
+    "train_folder":"train/",
+    "val_folder":"test/",
+    "test_folder":"test/",
+    "root_dir":"./hair_dataset_exp"
+  }

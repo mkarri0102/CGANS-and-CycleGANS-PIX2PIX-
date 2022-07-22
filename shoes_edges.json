@@ -1,0 +1,12 @@
+{
+    "experiment_name": "shoes_edges",
+    "image_dir":"./datasets/shoes_edges",
+    "label_dir":"./datasets/shoes_edges",
+    "batch_size":20,
+    "num_epochs":30,
+    "lambda":100,
+    "train_folder":"train/",
+    "val_folder":"val/",
+    "test_folder":"val/",
+    "root_dir":"./shoes_edges_exp"
+  }

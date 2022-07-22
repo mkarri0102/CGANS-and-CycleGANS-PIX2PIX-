@@ -1,0 +1,12 @@
+{
+    "experiment_name": "summer_winter",
+    "image_dir":"./datasets/summer_winter",
+    "label_dir":"./datasets/summer_winter",
+    "batch_size":2,
+    "num_epochs":20,
+    "lambda":100,
+    "train_folder":"train/",
+    "val_folder":"test/",
+    "test_folder":"test/",
+    "root_dir":"./summer_winter_exp4"
+  }
