@@ -72,6 +72,7 @@ class Generator(nn.Module):
         self.trconv8 = decoder_block(filters*2, out_ch, batch_norm=False)
 
     def forward(self, x):
+        
         x1 = self.conv1(x)
         x2 = self.conv2(x1)
         x3 = self.conv3(x2)
@@ -80,7 +81,7 @@ class Generator(nn.Module):
         x6 = self.conv6(x5)
         x7 = self.conv7(x6)
         x8 = self.conv8(x7)
-
+        
         dec1 = torch.cat([self.trconv1(x8), x7],1)
         dec2 = torch.cat([self.trconv2(dec1), x6],1)
         dec3 = torch.cat([self.trconv3(dec2), x5],1)

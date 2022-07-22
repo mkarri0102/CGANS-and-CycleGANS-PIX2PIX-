@@ -30,6 +30,13 @@ class load_data(data.Dataset):
             self.label_path+="HDR/"
             self.image_filenames=sorted([x for x in os.listdir(self.input_path) if not x.startswith('.')])
             self.label_filenames=sorted([x for x in os.listdir(self.label_path) if not x.startswith('.')])
+        elif(experiment_name=="color-gray"):
+            self.input_path+="color/"
+            self.label_path+="gray/"
+            self.image_filenames=sorted([x for x in os.listdir(self.input_path) if not x.startswith('.')])
+            self.label_filenames=sorted([x for x in os.listdir(self.label_path) if not x.startswith('.')])
+            
+             
             
     def __getitem__(self, index):
         # Load Image
@@ -49,6 +56,11 @@ class load_data(data.Dataset):
             img=img.crop((0,0,width/2-88,height-44))
             height=512
             width=1024
+        elif(self.experiment_name=="color-gray"):
+            label=label.crop((6,0,width,height))
+            img=img.crop((6,0,width,height))
+            height=256
+            width=256
             
         
             

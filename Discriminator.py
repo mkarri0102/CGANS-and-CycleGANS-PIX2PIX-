@@ -30,11 +30,14 @@ class Discriminator(nn.Module):
             nn.Conv2d(512,1,kernel_size=kernel_size,stride=1,padding=padding))
 
         
-    def forward(self,x,label):
-        x = torch.cat([x, label],1)
+    def forward(self,x,label=None):
+        if(label!=None):
+            x = torch.cat([x, label],1)
         x=self.layer1(x)
         x=self.layer2(x)
         x=self.layer3(x)
         x=self.layer4(x)
         x=self.layer5(x)
         return nn.Sigmoid()(x)
+
+    
