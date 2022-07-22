@@ -340,6 +340,6 @@ class CycleGAN():
             plt.close()
     
 if __name__=="__main__":
-    exp=Experiment("config_files/summer-winter")
+    exp=Experiment("summer-winter")
     exp.train()
     exp.test()
