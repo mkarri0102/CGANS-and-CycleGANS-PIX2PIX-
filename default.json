@@ -1,7 +1,0 @@
-{
-    "experiment_name": "cityscapes",
-    "image_dir":"./datasets/cityscapes/CityScapes",
-    "label_dir":"./datasets/cityscapes_labels/labels",
-    "num_epochs":10,
-    "lambda":100
-  }
